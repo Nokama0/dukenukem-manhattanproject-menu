@@ -1,0 +1,22 @@
+common {
+        ortho
+	priority	0
+}
+
+pass {
+        cull            none
+        depthmask       false
+        blendfunc       SRC_ALPHA           ONE_MINUS_SRC_ALPHA
+        depthfunc       ALWAYS
+        colorgen		select 0
+        layer {
+                nomips
+                uvgen           select  0
+                source          white.png
+                minfilter       nearest
+                magfilter       nearest
+                tquality        high
+                clamp
+                texenv          modulate
+        }
+}

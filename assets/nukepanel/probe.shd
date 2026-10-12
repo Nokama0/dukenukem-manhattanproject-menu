@@ -1,0 +1,20 @@
+common {
+        ortho
+	priority	0
+}
+
+pass {
+        depthmask       false
+        blendfunc       SRC_ALPHA           ONE_MINUS_SRC_ALPHA
+        depthfunc       ALWAYS
+        colorgen		select 0
+        layer {
+                nomips
+                uvgen           select  0
+                source          probe.png
+                minfilter       linear
+                magfilter       linear
+                tquality        high
+                clamp
+        }
+}

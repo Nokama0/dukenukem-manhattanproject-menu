@@ -1,0 +1,20 @@
+# LF in the index AND the working tree for every text file (decided 2026-09-27).
+# The Write tool, sed and Python all emit LF; eol=lf stops core.autocrlf=true
+# from checking files out as CRLF and producing whole-file diffs after scripted edits.
+* text=auto eol=lf
+
+# cmd.exe needs CRLF; Visual Studio rewrites these as CRLF anyway.
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.sln  text eol=crlf
+*.vcxproj text eol=crlf
+
+# Binary inputs kept in the repo.
+*.ct   -text
+# Game data shipped byte-for-byte as the base archive holds it (CRLF).
+*.sc   -text
+*.pdf  binary
+*.png  binary
+*.zip  binary
+*.exe  binary
+*.dll  binary

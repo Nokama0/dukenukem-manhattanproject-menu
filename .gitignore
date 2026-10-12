@@ -1,0 +1,11 @@
+build/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.log
+scratchpad/
+# Zoom downloads: 790 MB of installer, manual, editor and video -- local reference only.
+zoom/
+.superpowers/

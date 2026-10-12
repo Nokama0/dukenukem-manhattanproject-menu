@@ -1,0 +1,64 @@
+name: release
+
+permissions: {}
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-2022
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and test
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $out = powershell -File src/nukepanel/build.ps1 2>&1 | Out-String
+          Write-Host $out
+          if ($LASTEXITCODE -ne 0) { throw 'build exited with code ' + $LASTEXITCODE }
+          if ($out -notmatch ('(?<!\w)' + [regex]::Escape('0 failed') + '(?!\w)')) { throw 'build output lacks: 0 failed' }
+      - name: Make release zip
+        shell: pwsh
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          $stage = Join-Path $env:RUNNER_TEMP 'stage'
+          New-Item -ItemType Directory -Path $stage | Out-Null
+          $pairs = @(
+            ,@('build/winmm.dll','winmm.dll')
+            ,@('assets/nukepanel','duke/base/nukepanel')
+          )
+          foreach ($p in $pairs) {
+            if (-not (Test-Path -LiteralPath $p[0])) { throw 'missing: ' + $p[0] }
+            $to = Join-Path $stage $p[1]
+            New-Item -ItemType Directory -Force -Path (Split-Path $to -Parent) | Out-Null
+            Copy-Item -LiteralPath $p[0] -Destination $to -Recurse -Force
+          }
+          Compress-Archive -Path (Join-Path $stage '*') -DestinationPath ('dukenukem-manhattanproject-menu-' + $env:TAG + '.zip')
+      - name: Write checksum
+        shell: bash
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          ZIP="dukenukem-manhattanproject-menu-$TAG.zip"
+          sha256sum "$ZIP" > "$ZIP.sha256"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dukenukem-manhattanproject-menu-${{ github.ref_name }}.zip
+            build/winmm.dll
+      - name: Create release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" "dukenukem-manhattanproject-menu-$TAG.zip" "dukenukem-manhattanproject-menu-$TAG.zip.sha256" --generate-notes
